@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 籤詩解讀
 
-## Getting Started
+台灣傳統籤詩個人化 AI 解讀服務
 
-First, run the development server:
+## 功能特色
+
+- **5 種籤詩系統**：觀音靈籤（100首）、關帝靈籤（100首）、六十甲子籤（60首）、媽祖靈籤（60首）、呂祖靈籤（60首）
+- **個人化解讀**：根據使用者的具體問題，提供客製化的 AI 解讀
+- **串流回應**：即時顯示解讀結果，無需等待
+- **現代設計**：簡約風格結合中式文化元素
+- **完整資料**：包含籤詩原文、典故、傳統解曰、現代白話解析
+
+## 技術架構
+
+- **框架**: Next.js 15 (App Router) + React 19 + TypeScript
+- **樣式**: Tailwind CSS v4 + Noto Serif/Sans TC 字型
+- **AI**: Vercel AI SDK + Claude Sonnet 4 API
+- **部署**: Vercel
+
+## 本地開發
+
+1. 安裝依賴：
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
+bun install
+```
+
+2. 設定環境變數：
+
+建立 `.env.local` 檔案並加入你的 Anthropic API Key：
+
+```
+ANTHROPIC_API_KEY=your_api_key_here
+```
+
+3. 啟動開發伺服器：
+
+```bash
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. 開啟瀏覽器訪問 [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 部署到 Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/JiaWen-Shen/fortune-stick-web)
 
-## Learn More
+1. 點擊上方按鈕或前往 [Vercel](https://vercel.com)
+2. 匯入此 GitHub repository
+3. 設定環境變數 `ANTHROPIC_API_KEY`
+4. 點擊 Deploy
 
-To learn more about Next.js, take a look at the following resources:
+## 資料來源
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **六十甲子籤**：台東天后宮 (https://www.taitungtianhou.org.tw/)
+- **觀音靈籤、關帝靈籤、呂祖靈籤**：北海觀音明善堂 (https://www.mstn.org/)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 免責聲明
 
-## Deploy on Vercel
+本服務僅供參考，籤詩解讀為 AI 生成內容，不代表任何宮廟或宗教團體之官方立場。人生重大決定仍應依據個人判斷與專業建議。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 授權
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT License
