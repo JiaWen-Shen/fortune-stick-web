@@ -54,25 +54,21 @@ const QUESTION_CHIPS = [
   "感情", "事業", "財運", "健康", "考試", "家庭", "出行", "訴訟",
 ];
 
-type Step = "select" | "input" | "confirm" | "interpret";
+type Step = "input" | "confirm" | "interpret";
 
 export default function Home() {
-  const [step, setStep] = useState<Step>("select");
+  const [step, setStep] = useState<Step>("input");
   const [selectedSystem, setSelectedSystem] = useState<FortuneSystem | null>(null);
   const [stickNumber, setStickNumber] = useState("");
   const [question, setQuestion] = useState("");
+  const [additionalDetails, setAdditionalDetails] = useState("");
+  const [questionRestatement, setQuestionRestatement] = useState("");
   const [stickData, setStickData] = useState<FortuneStick | null>(null);
   const [interpretation, setInterpretation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const selectedSystemInfo = SYSTEMS_UI.find((s) => s.id === selectedSystem);
-
-  const handleSelectSystem = (system: FortuneSystem) => {
-    setSelectedSystem(system);
-    setStep("input");
-    setError("");
-  };
 
   const handleSubmitForm = async () => {
     if (!selectedSystem || !stickNumber || !question.trim()) return;
@@ -81,6 +77,7 @@ export default function Home() {
     setError("");
 
     try {
+      // Fetch fortune stick data
       const res = await fetch(
         `/api/fortune-data?system=${selectedSystem}&number=${stickNumber}`
       );
@@ -90,6 +87,9 @@ export default function Home() {
       }
       const data: FortuneStick = await res.json();
       setStickData(data);
+
+      // Set question restatement (use original for now, can add AI rephrasing later)
+      setQuestionRestatement(question.trim());
       setStep("confirm");
     } catch (err) {
       setError(err instanceof Error ? err.message : "發生錯誤");
@@ -107,13 +107,17 @@ export default function Home() {
     setError("");
 
     try {
+      const finalQuestion = additionalDetails.trim()
+        ? `${questionRestatement}\n\n補充說明：${additionalDetails.trim()}`
+        : questionRestatement;
+
       const res = await fetch("/api/interpret", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           system: selectedSystem,
           stickNumber: parseInt(stickNumber, 10),
-          question: question.trim(),
+          question: finalQuestion,
         }),
       });
 
@@ -143,10 +147,12 @@ export default function Home() {
   };
 
   const handleReset = useCallback(() => {
-    setStep("select");
+    setStep("input");
     setSelectedSystem(null);
     setStickNumber("");
     setQuestion("");
+    setAdditionalDetails("");
+    setQuestionRestatement("");
     setStickData(null);
     setInterpretation("");
     setError("");
@@ -154,12 +160,11 @@ export default function Home() {
   }, []);
 
   const handleBack = () => {
-    if (step === "input") {
-      setStep("select");
-      setSelectedSystem(null);
-    } else if (step === "confirm") {
+    if (step === "confirm") {
       setStep("input");
       setStickData(null);
+      setQuestionRestatement("");
+      setAdditionalDetails("");
     }
   };
 
@@ -174,39 +179,98 @@ export default function Home() {
           </div>
         )}
 
-        {/* Step 1: System Selection */}
-        {step === "select" && (
+        {/* Step 1: Input Form */}
+        {step === "input" && (
           <div>
-            <h2 className="font-serif text-lg text-center text-[var(--color-text-light)] mb-6">
-              請選擇您的籤詩系統
+            <h2 className="font-serif text-2xl text-center text-[var(--color-primary)] mb-8">
+              籤詩解讀
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {SYSTEMS_UI.map((sys) => (
-                <button
-                  key={sys.id}
-                  onClick={() => handleSelectSystem(sys.id)}
-                  className="text-left p-5 rounded-lg border border-[var(--color-border)] bg-white hover:border-[var(--color-gold)] hover:shadow-md transition-all duration-200 cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl">{sys.icon}</span>
-                    <span className="font-serif text-lg font-bold text-[var(--color-primary)]">
-                      {sys.name}
-                    </span>
-                    <span className="text-xs text-[var(--color-text-light)] ml-auto">
-                      {sys.count} 首
-                    </span>
-                  </div>
-                  <p className="text-sm text-[var(--color-text-light)]">
-                    {sys.description}
-                  </p>
-                  <p className="text-xs text-[var(--color-text-light)] mt-1 opacity-70">
-                    {sys.temple}
-                  </p>
-                </button>
-              ))}
+
+            <div className="bg-white rounded-lg border border-[var(--color-border)] p-6 md:p-8">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-[var(--color-text)]">
+                    1. 選擇籤詩系統
+                  </label>
+                  <select
+                    value={selectedSystem || ""}
+                    onChange={(e) => setSelectedSystem(e.target.value as FortuneSystem)}
+                    className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)] outline-none bg-[var(--color-cream)] cursor-pointer"
+                  >
+                    <option value="">請選擇籤詩系統</option>
+                    {SYSTEMS_UI.map((sys) => (
+                      <option key={sys.id} value={sys.id}>
+                        {sys.icon} {sys.name} ({sys.count}首)
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {selectedSystem && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-[var(--color-text)]">
+                        2. 輸入籤號
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={SYSTEMS_UI.find(s => s.id === selectedSystem)?.count}
+                        value={stickNumber}
+                        onChange={(e) => setStickNumber(e.target.value)}
+                        placeholder={`請輸入 1 到 ${SYSTEMS_UI.find(s => s.id === selectedSystem)?.count}`}
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)] outline-none text-lg bg-[var(--color-cream)]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-[var(--color-text)]">
+                        3. 簡述問題 <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {QUESTION_CHIPS.map((chip) => (
+                          <button
+                            key={chip}
+                            onClick={() =>
+                              setQuestion((q) =>
+                                q ? `${q}（${chip}方面）` : `想請問${chip}方面的問題：`
+                              )
+                            }
+                            className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text-light)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-colors cursor-pointer"
+                          >
+                            {chip}
+                          </button>
+                        ))}
+                      </div>
+                      <textarea
+                        value={question}
+                        onChange={(e) => setQuestion(e.target.value)}
+                        placeholder="請描述您想問的具體問題..."
+                        rows={4}
+                        required
+                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)] outline-none text-sm leading-relaxed bg-[var(--color-cream)] resize-none"
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleSubmitForm}
+                      disabled={
+                        !stickNumber ||
+                        !question.trim() ||
+                        isLoading ||
+                        parseInt(stickNumber) < 1 ||
+                        parseInt(stickNumber) > (SYSTEMS_UI.find(s => s.id === selectedSystem)?.count || 0)
+                      }
+                      className="w-full py-3 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:bg-[var(--color-primary)]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                    >
+                      {isLoading ? "處理中..." : "下一步"}
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
-            <div className="mt-8 text-center">
+            <div className="mt-6 text-center">
               <p className="text-sm text-[var(--color-text-light)]">
                 還沒有籤號？請先到廟宇或線上求籤，取得籤號後再來解讀
               </p>
@@ -214,119 +278,67 @@ export default function Home() {
           </div>
         )}
 
-        {/* Step 2: Input Form */}
-        {step === "input" && selectedSystemInfo && (
-          <div>
-            <button
-              onClick={handleBack}
-              className="text-sm text-[var(--color-text-light)] hover:text-[var(--color-primary)] mb-4 cursor-pointer"
-            >
-              ← 重新選擇系統
-            </button>
-
-            <div className="bg-white rounded-lg border border-[var(--color-border)] p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <span className="text-xl">{selectedSystemInfo.icon}</span>
-                <h2 className="font-serif text-lg font-bold text-[var(--color-primary)]">
-                  {selectedSystemInfo.name}
-                </h2>
-              </div>
-
-              <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-[var(--color-text)]">
-                    籤號（1 - {selectedSystemInfo.count}）
-                  </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={selectedSystemInfo.count}
-                    value={stickNumber}
-                    onChange={(e) => setStickNumber(e.target.value)}
-                    placeholder={`請輸入 1 到 ${selectedSystemInfo.count}`}
-                    className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)] outline-none text-lg bg-[var(--color-cream)]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-[var(--color-text)]">
-                    您想問的問題
-                  </label>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {QUESTION_CHIPS.map((chip) => (
-                      <button
-                        key={chip}
-                        onClick={() =>
-                          setQuestion((q) =>
-                            q ? `${q}（${chip}方面）` : `想請問${chip}方面的問題：`
-                          )
-                        }
-                        className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text-light)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-colors cursor-pointer"
-                      >
-                        {chip}
-                      </button>
-                    ))}
-                  </div>
-                  <textarea
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    placeholder="請描述您想問的具體問題，越具體越能獲得精準的解讀..."
-                    rows={4}
-                    className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)] outline-none text-sm leading-relaxed bg-[var(--color-cream)] resize-none"
-                  />
-                </div>
-
-                <button
-                  onClick={handleSubmitForm}
-                  disabled={
-                    !stickNumber ||
-                    !question.trim() ||
-                    isLoading ||
-                    parseInt(stickNumber) < 1 ||
-                    parseInt(stickNumber) > selectedSystemInfo.count
-                  }
-                  className="w-full py-3 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:bg-[var(--color-primary)]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                >
-                  {isLoading ? "查詢中..." : "查看籤詩"}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: Poem Confirmation */}
+        {/* Step 2: Confirmation */}
         {step === "confirm" && stickData && (
           <div>
-            <button
-              onClick={handleBack}
-              className="text-sm text-[var(--color-text-light)] hover:text-[var(--color-primary)] mb-4 cursor-pointer"
-            >
-              ← 修改籤號或問題
-            </button>
-
-            <h2 className="font-serif text-lg text-center text-[var(--color-text-light)] mb-6">
-              請確認這是您抽到的籤
+            <h2 className="font-serif text-2xl text-center text-[var(--color-primary)] mb-8">
+              確認資訊
             </h2>
 
-            <PoemDisplay
-              poem={stickData.poem}
-              displayNumber={stickData.displayNumber}
-              rank={stickData.rank}
-              story={stickData.story}
-            />
+            <div className="space-y-6">
+              {/* Question Restatement */}
+              <div className="bg-white rounded-lg border border-[var(--color-border)] p-6">
+                <h3 className="font-serif text-lg font-bold text-[var(--color-primary)] mb-3">
+                  問題整理
+                </h3>
+                <p className="text-[var(--color-text)] leading-relaxed bg-[var(--color-cream-dark)] p-4 rounded-lg">
+                  {questionRestatement || question}
+                </p>
+              </div>
 
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={handleBack}
-                className="flex-1 py-3 rounded-lg border border-[var(--color-border)] text-[var(--color-text-light)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors cursor-pointer"
-              >
-                不對，重新輸入
-              </button>
+              {/* Additional Details */}
+              <div className="bg-white rounded-lg border border-[var(--color-border)] p-6">
+                <h3 className="font-serif text-lg font-bold text-[var(--color-primary)] mb-3">
+                  問題補充 <span className="text-sm font-normal text-[var(--color-text-light)]">(可選填)</span>
+                </h3>
+                <textarea
+                  value={additionalDetails}
+                  onChange={(e) => setAdditionalDetails(e.target.value)}
+                  placeholder="如果有需要補充的細節，可以在這裡說明..."
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)] outline-none text-sm leading-relaxed bg-[var(--color-cream)] resize-none"
+                />
+              </div>
+
+              {/* Poem Preview */}
+              <div className="bg-white rounded-lg border border-[var(--color-border)] p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-serif text-lg font-bold text-[var(--color-primary)]">
+                    籤詩預覽及核對
+                  </h3>
+                  <button
+                    onClick={handleBack}
+                    className="text-sm px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text-light)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] transition-colors cursor-pointer"
+                  >
+                    更正籤詩
+                  </button>
+                </div>
+
+                <PoemDisplay
+                  poem={stickData.poem}
+                  displayNumber={stickData.displayNumber}
+                  rank={stickData.rank}
+                  story={stickData.story}
+                />
+              </div>
+
+              {/* Confirm Button */}
               <button
                 onClick={handleConfirm}
-                className="flex-1 py-3 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:bg-[var(--color-primary)]/90 transition-colors cursor-pointer"
+                disabled={isLoading}
+                className="w-full py-3 rounded-lg bg-[var(--color-primary)] text-white font-medium hover:bg-[var(--color-primary)]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
-                確認，開始解讀
+                {isLoading ? "正在解讀..." : "確認，開始解讀"}
               </button>
             </div>
           </div>
