@@ -122,6 +122,10 @@ export default function Home() {
       });
 
       if (!res.ok) {
+        const errorText = await res.text();
+        if (errorText.includes("credit balance")) {
+          throw new Error("API 額度不足，請檢查 Anthropic 帳戶餘額");
+        }
         throw new Error("解籤服務暫時無法使用");
       }
 
