@@ -183,7 +183,7 @@ export default function Home() {
         {step === "input" && (
           <div>
             <h2 className="font-serif text-2xl text-center text-[var(--color-primary)] mb-8">
-              籤詩解讀
+              輸入籤詩資訊
             </h2>
 
             <div className="bg-white rounded-lg border border-[var(--color-border)] p-6 md:p-8">
@@ -231,25 +231,37 @@ export default function Home() {
                         {QUESTION_CHIPS.map((chip) => (
                           <button
                             key={chip}
-                            onClick={() =>
-                              setQuestion((q) =>
-                                q ? `${q}（${chip}方面）` : `想請問${chip}方面的問題：`
-                              )
-                            }
+                            onClick={() => setQuestion(`想請問${chip}方面的問題：`)}
                             className="text-xs px-3 py-1.5 rounded-full border border-[var(--color-border)] text-[var(--color-text-light)] hover:border-[var(--color-gold)] hover:text-[var(--color-gold)] transition-colors cursor-pointer"
                           >
                             {chip}
                           </button>
                         ))}
                       </div>
-                      <textarea
-                        value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        placeholder="請描述您想問的具體問題..."
-                        rows={4}
-                        required
-                        className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)] outline-none text-sm leading-relaxed bg-[var(--color-cream)] resize-none"
-                      />
+                      <div className="relative">
+                        <textarea
+                          value={question}
+                          onChange={(e) => setQuestion(e.target.value)}
+                          placeholder="請描述您想問的具體問題..."
+                          rows={4}
+                          required
+                          className="w-full px-4 py-3 rounded-lg border border-[var(--color-border)] focus:border-[var(--color-gold)] focus:ring-1 focus:ring-[var(--color-gold)] outline-none text-sm leading-relaxed bg-[var(--color-cream)] resize-none"
+                        />
+                        {question && (
+                          <button
+                            onClick={() => setQuestion("")}
+                            className="absolute top-3 right-3 text-[var(--color-text-light)] hover:text-[var(--color-primary)] transition-colors cursor-pointer"
+                            title="清除內容"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      <p className="mt-2 text-xs text-[var(--color-text-light)] leading-relaxed">
+                        原則上一隻籤回答一個問題，問題敘述得愈詳細，個人化解籤就愈完整，請勿輸入個人隱私資訊
+                      </p>
                     </div>
 
                     <button

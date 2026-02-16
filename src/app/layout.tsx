@@ -17,7 +17,7 @@ const notoSansTC = Noto_Sans_TC({
 });
 
 export const metadata: Metadata = {
-  title: "籤詩解讀 — 傳統籤詩個人化解讀服務",
+  title: "個人化解籤 — 傳統籤詩 AI 解讀服務",
   description:
     "提供觀音靈籤、關帝靈籤、六十甲子籤、媽祖靈籤、呂祖靈籤的個人化 AI 解讀服務。輸入您的籤號與問題，獲得專屬解讀。",
 };
