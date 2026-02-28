@@ -100,7 +100,7 @@ export default function Home() {
           setStickData(data);
           // Scroll poem preview into view on mobile
           setTimeout(() => {
-            poemRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            poemRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
           }, 100);
         }
       } catch (err) {
@@ -292,6 +292,7 @@ export default function Home() {
                       displayNumber={stickData.displayNumber}
                       rank={stickData.rank}
                       story={stickData.story}
+                      attribute={stickData.attribute}
                     />
                   </div>
                 ) : null}
@@ -378,6 +379,7 @@ export default function Home() {
                 displayNumber={stickData.displayNumber}
                 rank={stickData.rank}
                 story={stickData.story}
+                attribute={stickData.attribute}
               />
             )}
 

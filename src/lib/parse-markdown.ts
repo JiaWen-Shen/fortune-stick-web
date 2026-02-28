@@ -1,4 +1,5 @@
 import type { FortuneStick, FortuneSystem } from './fortune-types';
+import { LIUSHIJIAZI_STORIES } from './systems';
 
 const CHINESE_NUMBERS: Record<string, number> = {
   '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
@@ -104,6 +105,7 @@ function parseLiushijiazi(content: string, number: number): FortuneStick | null 
       number: num,
       displayNumber,
       attribute,
+      story: LIUSHIJIAZI_STORIES[num],
       poem,
       sections,
     };
