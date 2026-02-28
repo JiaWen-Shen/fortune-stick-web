@@ -51,6 +51,7 @@ export const SYSTEM_ORDER: FortuneSystem[] = [
   'lvzu',
 ];
 
+// 六十甲子籤 / 媽祖靈籤：按天干分組排列（非標準甲子順序）
 export const TIANGAN_DIZHI = [
   '甲子', '甲寅', '甲辰', '甲午', '甲申', '甲戌',
   '乙丑', '乙卯', '乙巳', '乙未', '乙酉', '乙亥',
@@ -63,3 +64,19 @@ export const TIANGAN_DIZHI = [
   '壬子', '壬寅', '壬辰', '壬午', '壬申', '壬戌',
   '癸丑', '癸卯', '癸巳', '癸未', '癸酉', '癸亥',
 ];
+
+// 呂祖靈籤：標準六十甲子順序
+export const TIANGAN_DIZHI_STANDARD = [
+  '甲子', '乙丑', '丙寅', '丁卯', '戊辰', '己巳', '庚午', '辛未', '壬申', '癸酉',
+  '甲戌', '乙亥', '丙子', '丁丑', '戊寅', '己卯', '庚辰', '辛巳', '壬午', '癸未',
+  '甲申', '乙酉', '丙戌', '丁亥', '戊子', '己丑', '庚寅', '辛卯', '壬辰', '癸巳',
+  '甲午', '乙未', '丙申', '丁酉', '戊戌', '己亥', '庚子', '辛丑', '壬寅', '癸卯',
+  '甲辰', '乙巳', '丙午', '丁未', '戊申', '己酉', '庚戌', '辛亥', '壬子', '癸丑',
+  '甲寅', '乙卯', '丙辰', '丁巳', '戊午', '己未', '庚申', '辛酉', '壬戌', '癸亥',
+];
+
+export function getSystemTiangan(system: string): string[] | null {
+  if (system === 'liushijiazi' || system === 'mazu') return TIANGAN_DIZHI;
+  if (system === 'lvzu') return TIANGAN_DIZHI_STANDARD;
+  return null;
+}

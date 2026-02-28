@@ -105,7 +105,6 @@ function parseLiushijiazi(content: string, number: number): FortuneStick | null 
       displayNumber,
       attribute,
       poem,
-      story: tiangan,
       sections,
     };
   }
@@ -123,6 +122,7 @@ function parseGuanyin(content: string, number: number): FortuneStick | null {
     const num = parseInt(headerMatch[1], 10);
     if (num !== number) continue;
 
+    const poem = extractPoemFromInline(entry);
     const cleaned = stripBoilerplate(entry);
     const displayNumber = `第${num}籤`;
 
@@ -150,8 +150,6 @@ function parseGuanyin(content: string, number: number): FortuneStick | null {
         }
       }
     }
-
-    const poem = extractPoemFromInline(cleaned);
 
     const sections: Record<string, string> = {};
 
@@ -186,6 +184,7 @@ function parseGuandi(content: string, number: number): FortuneStick | null {
     const num = parseInt(headerMatch[1], 10);
     if (num !== number) continue;
 
+    const poem = extractPoemFromInline(entry);
     const cleaned = stripBoilerplate(entry);
     const displayNumber = `第${num}籤`;
 
@@ -209,8 +208,6 @@ function parseGuandi(content: string, number: number): FortuneStick | null {
         }
       }
     }
-
-    const poem = extractPoemFromInline(cleaned);
 
     const sections: Record<string, string> = {};
     const sectionPattern = /[〖【]\s*(.+?)\s*[〗】]\n([\s\S]*?)(?=[〖【]|$)/g;
@@ -246,8 +243,6 @@ function parseLvzu(content: string, number: number): FortuneStick | null {
     const cleaned = stripBoilerplate(entry);
     const displayNumber = `第${num}籤`;
 
-    // Get tiangan from header or 典故 line
-    const tianganMatch = entry.match(/## 第\d+\s*籤\s+(.+)/);
     const storyMatch = cleaned.match(/\*\*典故\*\*[：:]\s*(.+)/);
     const story = storyMatch?.[1]?.trim();
 

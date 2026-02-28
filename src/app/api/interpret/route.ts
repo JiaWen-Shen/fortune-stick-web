@@ -1,10 +1,11 @@
 import { NextRequest } from 'next/server';
-import { streamText } from 'ai';
-import { anthropic } from '@ai-sdk/anthropic';
 import { getFortuneStick } from '@/lib/fortune-data';
 import type { FortuneSystem } from '@/lib/fortune-types';
 import { SYSTEMS } from '@/lib/systems';
 import { INTERPRETATION_SYSTEM_PROMPT } from '@/lib/prompts';
+
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'deepseek-r1:7b';
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -60,12 +61,62 @@ ${sectionsText}
 
 請根據以上籤詩資料，針對用戶的問題提供客製化解讀。`;
 
-  const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
-    system: INTERPRETATION_SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userMessage }],
-    maxOutputTokens: 4000,
+  const ollamaRes = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: OLLAMA_MODEL,
+      messages: [
+        { role: 'system', content: INTERPRETATION_SYSTEM_PROMPT },
+        { role: 'user', content: userMessage },
+      ],
+      stream: true,
+    }),
   });
 
-  return result.toTextStreamResponse();
+  if (!ollamaRes.ok || !ollamaRes.body) {
+    const err = await ollamaRes.text();
+    return new Response(
+      JSON.stringify({ error: `Ollama 錯誤：${err}` }),
+      { status: 502, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  // 將 Ollama NDJSON 串流轉換成純文字串流
+  // Ollama 已將 DeepSeek R1 的推理過程放在 message.thinking 欄位
+  // message.content 只包含最終答案，直接輸出即可
+  const encoder = new TextEncoder();
+  const readable = new ReadableStream({
+    async start(controller) {
+      const reader = ollamaRes.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const json = JSON.parse(line);
+            const content = json.message?.content;
+            if (!content) continue;
+            controller.enqueue(encoder.encode(content));
+          } catch {
+            // 忽略非 JSON 行
+          }
+        }
+      }
+      controller.close();
+    },
+  });
+
+  return new Response(readable, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
 }
