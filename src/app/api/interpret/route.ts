@@ -59,7 +59,9 @@ ${sectionsText}
 ---
 用戶的問題：${question}
 
-請根據以上籤詩資料，針對用戶的問題提供客製化解讀。`;
+請根據以上籤詩資料，針對用戶的問題提供客製化解讀。
+
+【重要】請全程使用繁體中文回答，不可夾雜英文或簡體字。`;
 
   const ollamaRes = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
     method: 'POST',
