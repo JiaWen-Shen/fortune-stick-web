@@ -3,6 +3,10 @@ import { getFortuneStick } from '@/lib/fortune-data';
 import type { FortuneSystem } from '@/lib/fortune-types';
 import { SYSTEMS } from '@/lib/systems';
 import { INTERPRETATION_SYSTEM_PROMPT } from '@/lib/prompts';
+import * as OpenCC from 'opencc-js';
+
+// 簡體→繁體（台灣標準）轉換器，在 module 層級初始化避免每次請求重建
+const s2tw = OpenCC.Converter({ from: 'cn', to: 'twp' });
 
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'deepseek-r1:7b';
@@ -108,7 +112,7 @@ ${sectionsText}
             const json = JSON.parse(line);
             const content = json.message?.content;
             if (!content) continue;
-            controller.enqueue(encoder.encode(content));
+            controller.enqueue(encoder.encode(s2tw(content)));
           } catch {
             // 忽略非 JSON 行
           }
