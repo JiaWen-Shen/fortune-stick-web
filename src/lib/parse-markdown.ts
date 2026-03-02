@@ -1,5 +1,5 @@
 import type { FortuneStick, FortuneSystem } from './fortune-types';
-import { LIUSHIJIAZI_STORIES } from './systems';
+import { LIUSHIJIAZI_STORIES, GUANDI_STORIES } from './systems';
 
 const CHINESE_NUMBERS: Record<string, number> = {
   '一': 1, '二': 2, '三': 3, '四': 4, '五': 5,
@@ -218,13 +218,20 @@ function parseGuandi(content: string, number: number): FortuneStick | null {
       sections[match[1].trim()] = match[2].trim();
     }
 
+    const guandiStories = GUANDI_STORIES[num];
+    const guandiStory = guandiStories
+      ? guandiStories[1]
+        ? `${guandiStories[0]} ／ ${guandiStories[1]}`
+        : guandiStories[0]
+      : story;
+
     return {
       system: 'guandi',
       number: num,
       displayNumber,
       rank,
       poem,
-      story,
+      story: guandiStory,
       sections,
     };
   }
